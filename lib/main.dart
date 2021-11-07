@@ -1,53 +1,27 @@
+import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_github_profile/github_profile_colors.dart';
-import 'package:flutter_github_profile/ui/search_component.dart';
+import 'package:flutter_github_profile/datasource/profile_services.dart';
+import 'package:flutter_github_profile/screens/home_content_screen.dart';
+import 'package:flutter_github_profile/screens/home_controller.dart';
 
 void main() {
-  runApp(MainContentScreen());
+  runApp(const InitialScreen());
 }
 
-class MainContentScreen extends StatefulWidget {
-  @override
-  _MainContentScreenState createState() => _MainContentScreenState();
-}
-
-class _MainContentScreenState extends State<MainContentScreen> {
-  SearchState searchState = SearchState.initialState;
-  late TextEditingController _textController;
-
-  @override
-  void initState() {
-    super.initState();
-    _textController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _textController.dispose();
-    super.dispose();
-  }
+class InitialScreen extends StatelessWidget {
+  const InitialScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'GithubProfile',
-      home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: GithubProfileColors.colorPrimary,
-          title: SearchToolbar(
-            textController: _textController,
-            searchState: searchState,
-            onChangeSearchState: (nextState) {
-              setState(() {
-                searchState = nextState;
-              });
-            },
-            onClearText: () {
-              _textController.text = "";
-            },
-          ),
-        ),
-      ),
+    final List<Bloc> blocs = [];
+    final Bloc<HomeController> lessonsBloc = Bloc<HomeController>((value) {
+      return HomeController(ProfileService());
+    });
+    blocs.add(lessonsBloc);
+    return BlocProvider(
+      dependencies: [EmptyDependency()],
+        blocs: blocs,
+        child: HomeContentScreen()
     );
   }
 }
