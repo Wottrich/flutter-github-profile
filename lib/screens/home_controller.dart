@@ -9,18 +9,16 @@ class HomeController implements BlocBase {
 
   final ProfileService profileService;
 
-  Profile? _profile = null;
-
   HomeController(this.profileService);
 
-  final StreamController<Profile> _profileController = StreamController();
-  Stream<Profile> get outProfile => _profileController.stream;
-  Sink<Profile> get inProfile => _profileController.sink;
+  final StreamController<StateScreen<Profile>> _profileController = StreamController();
+  Stream<StateScreen<Profile>> get outProfile => _profileController.stream;
+  Sink<StateScreen<Profile>> get inProfile => _profileController.sink;
 
-  void loadProfile(String profileLogin) async {
+  void fetchProfile(String profileLogin) async {
+    inProfile.add(StateScreen.initial(isLoading: true));
     Profile profile = await profileService.getGithubProfile(profileLogin);
-    _profile = profile;
-    inProfile.add(profile);
+    inProfile.add(StateScreen.success(profile));
   }
 
   @override
@@ -45,4 +43,37 @@ class HomeController implements BlocBase {
 
   @override
   void notifyListeners() {}
+}
+
+class StateScreen<T> {
+  StateScreen(this.data, this.error, this.isLoading);
+  bool isLoading;
+  Object? error;
+  T? data;
+
+  bool isInitialWithoutLoading() => !isLoading && error == null && data == null;
+
+  bool hasError() => error != null;
+
+  bool isSuccess() => data != null;
+
+  T getDataNotNull() {
+    if (data == null) {
+      throw NullThrownError();
+    }
+    return data!;
+  }
+
+  static StateScreen<T> initial<T>({bool isLoading = true}) {
+    return StateScreen<T>(null, null, isLoading);
+  }
+
+  static StateScreen<T> failure<T>(Object? error) {
+    return StateScreen<T>(null, error, false);
+  }
+
+  static StateScreen<T> success<T>(T data) {
+    return StateScreen<T>(data, null, false);
+  }
+
 }

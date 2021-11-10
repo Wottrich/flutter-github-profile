@@ -47,7 +47,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
               _textController.text = "";
             },
             onSearch: (query) {
-              homeController.loadProfile(query);
+              homeController.fetchProfile(query);
             },
           ),
         ),
@@ -60,19 +60,24 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
 
   Widget _profileStreamComponentBuilder(HomeController homeController) {
     return StreamBuilder(
-        initialData: null,
+        initialData: StateScreen.initial<Profile>(isLoading: false),
         stream: homeController.outProfile,
         builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.none:
-              return const Text("Search profile");
-            case ConnectionState.waiting:
-              return const CircularProgressIndicator();
-            case ConnectionState.active:
-            case ConnectionState.done:
-              final Profile profile = snapshot.data as Profile;
-              return Text(profile.name);
+          StateScreen<Profile> stateProfile = snapshot.data as StateScreen<Profile>;
+          if (stateProfile.isLoading) {
+            return const CircularProgressIndicator();
           }
+
+          if (stateProfile.hasError()) {
+            return const Text("with error");
+          }
+
+          if (stateProfile.isSuccess()) {
+            Profile profile = stateProfile.getDataNotNull();
+            return Text(profile.name);
+          }
+
+          return const Text("Search your profile");
         });
   }
 }
